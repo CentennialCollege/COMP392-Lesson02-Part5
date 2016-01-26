@@ -37,13 +37,14 @@ var ambientLight;
 var spotLight;
 var control;
 var gui;
+var guiScale;
+var guiPosition;
+var guiRotation;
+var guiTranslate;
 var stats;
 var step = 0;
-var vertices = new Array();
-var faces = new Array();
-var customGeometry;
-var customMaterials = new Array();
-var customMesh;
+var cubeMaterial;
+var cubeGeometry;
 function init() {
     // Instantiate a new Scene object
     scene = new Scene();
@@ -64,16 +65,20 @@ function init() {
     console.log("Added an Ambient Light to Scene");
     // Add a SpotLight to the scene
     spotLight = new SpotLight(0xffffff);
-    spotLight.position.set(-40, 60, 10);
+    spotLight.position.set(-40, 60, 20);
     spotLight.castShadow = true;
     scene.add(spotLight);
     console.log("Added a SpotLight Light to Scene");
-    // Call the Custom Mesh function
-    initializeCustomMesh();
+    cubeMaterial = new LambertMaterial({ color: 0x44ff44 });
+    cubeGeometry = new CubeGeometry(5, 8, 3);
+    cube = new Mesh(cubeGeometry, cubeMaterial);
+    cube.position.y = 4;
+    cube.castShadow = true;
+    scene.add(cube);
+    console.log("Added a Cube Primitive to the Scene");
     // add controls
     gui = new GUI();
-    control = new Control(customMesh);
-    addControlPoints();
+    control = new Control(cube);
     addControl(control);
     // Add framerate stats
     addStatsObject();
@@ -82,76 +87,48 @@ function init() {
     gameLoop(); // render the scene	
     window.addEventListener('resize', onResize, false);
 }
-function initializeCustomMesh() {
-    vertices = [
-        new THREE.Vector3(1, 3, 1),
-        new THREE.Vector3(1, 3, -1),
-        new THREE.Vector3(1, -1, 1),
-        new THREE.Vector3(1, -1, -1),
-        new THREE.Vector3(-1, 3, -1),
-        new THREE.Vector3(-1, 3, 1),
-        new THREE.Vector3(-1, -1, -1),
-        new THREE.Vector3(-1, -1, 1)
-    ];
-    faces = [
-        new THREE.Face3(0, 2, 1),
-        new THREE.Face3(2, 3, 1),
-        new THREE.Face3(4, 6, 5),
-        new THREE.Face3(6, 7, 5),
-        new THREE.Face3(4, 5, 1),
-        new THREE.Face3(5, 0, 1),
-        new THREE.Face3(7, 6, 2),
-        new THREE.Face3(6, 3, 2),
-        new THREE.Face3(5, 7, 0),
-        new THREE.Face3(7, 2, 0),
-        new THREE.Face3(1, 3, 4),
-        new THREE.Face3(3, 6, 4),
-    ];
-    createCustomMesh();
-    console.log("Added Custom Mesh to Scene");
-}
-function addControlPoints() {
-    control.points.push(new Point(3, 5, 3));
-    control.points.push(new Point(3, 5, 0));
-    control.points.push(new Point(3, 0, 3));
-    control.points.push(new Point(3, 0, 0));
-    control.points.push(new Point(0, 5, 0));
-    control.points.push(new Point(0, 5, 3));
-    control.points.push(new Point(0, 0, 0));
-    control.points.push(new Point(0, 0, 3));
-}
-function createCustomMesh() {
-    customGeometry = new Geometry();
-    customGeometry.vertices = vertices;
-    customGeometry.faces = faces;
-    customGeometry.mergeVertices();
-    customGeometry.computeFaceNormals();
-    customMaterials = [
-        new LambertMaterial({ opacity: 0.6, color: 0x44ff44, transparent: true }),
-        new MeshBasicMaterial({ color: 0x000000, wireframe: true })
-    ];
-    customMesh = THREE.SceneUtils.createMultiMaterialObject(customGeometry, customMaterials);
-    customMesh.children.forEach(function (child) {
-        child.castShadow = true;
-    });
-    customMesh.name = "customMesh";
-    scene.add(customMesh);
-}
+// Change the Camera Aspect Ration according to Screen Size changes
 function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 function addControl(controlObject) {
-    gui.add(controlObject, 'clone');
-    for (var index = 0; index < 8; index++) {
-        var folder;
-        folder = gui.addFolder('Vertices ' + (index + 1));
-        folder.add(controlObject.points[index], 'x', -10, 10);
-        folder.add(controlObject.points[index], 'y', -10, 10);
-        folder.add(controlObject.points[index], 'z', -10, 10);
-    }
+    // Add Scale Folder
+    guiScale = gui.addFolder('scale');
+    guiScale.add(controlObject, 'scaleX', 0, 5);
+    guiScale.add(controlObject, 'scaleY', 0, 5);
+    guiScale.add(controlObject, 'scaleZ', 0, 5);
+    // Add Position Folder
+    guiPosition = gui.addFolder('position');
+    var contX = guiPosition.add(controlObject, 'positionX', -10, 10);
+    var contY = guiPosition.add(controlObject, 'positionY', -4, 20);
+    var contZ = guiPosition.add(controlObject, 'positionZ', -10, 10);
+    contX.listen();
+    contX.onChange(function (value) {
+        cube.position.x = controlObject.positionX;
+    });
+    contY.listen();
+    contY.onChange(function (value) {
+        cube.position.y = controlObject.positionY;
+    });
+    contZ.listen();
+    contZ.onChange(function (value) {
+        cube.position.z = controlObject.positionZ;
+    });
+    // Add Rotation Folder
+    guiRotation = gui.addFolder('rotation');
+    guiRotation.add(controlObject, 'rotationX', -4, 4);
+    guiRotation.add(controlObject, 'rotationY', -4, 4);
+    guiRotation.add(controlObject, 'rotationZ', -4, 4);
+    // Add Translate Folder
+    guiTranslate = gui.addFolder('translate');
+    guiTranslate.add(controlObject, 'translateX', -10, 10);
+    guiTranslate.add(controlObject, 'translateY', -10, 10);
+    guiTranslate.add(controlObject, 'translateZ', -10, 10);
+    guiTranslate.add(controlObject, 'translate');
 }
+// Add Stats Object to the Scene
 function addStatsObject() {
     stats = new Stats();
     stats.setMode(0);
@@ -163,13 +140,10 @@ function addStatsObject() {
 // Setup main game loop
 function gameLoop() {
     stats.update();
-    vertices = new Array();
-    for (var index = 0; index < 8; index++) {
-        vertices.push(new Vector3(control.points[index].x, control.points[index].y, control.points[index].z));
-    }
-    // remove our customMesh from the scene and add it every frame 
-    scene.remove(scene.getObjectByName("customMesh"));
-    createCustomMesh();
+    cube.rotation.x = control.rotationX;
+    cube.rotation.y = control.rotationY;
+    cube.rotation.z = control.rotationZ;
+    cube.scale.set(control.scaleX, control.scaleY, control.scaleZ);
     // render using requestAnimationFrame
     requestAnimationFrame(gameLoop);
     // render the scene
@@ -186,10 +160,10 @@ function setupRenderer() {
 // Setup main camera for the scene
 function setupCamera() {
     camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.x = -20;
-    camera.position.y = 25;
-    camera.position.z = 20;
-    camera.lookAt(new Vector3(5, 0, 0));
+    camera.position.x = -30;
+    camera.position.y = 40;
+    camera.position.z = 30;
+    camera.lookAt(scene.position);
     console.log("Finished setting up Camera...");
 }
 //# sourceMappingURL=game.js.map

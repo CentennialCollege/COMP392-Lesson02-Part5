@@ -5,24 +5,30 @@ var objects;
     var Control = (function () {
         // CONSTRUCTOR ++++++++++++++++++++++++++++++++++++++++
         function Control(mesh) {
-            this.points = new Array();
+            //PUBLIC INSTANCE VARIABLES +++++++++++++++++++++++++++
+            this.scaleX = 1;
+            this.scaleY = 1;
+            this.scaleZ = 1;
+            this.positionX = 0;
+            this.positionY = 4;
+            this.positionZ = 0;
+            this.rotationX = 0;
+            this.rotationY = 0;
+            this.rotationZ = 0;
+            this.scale = 1;
+            this.translateX = 0;
+            this.translateY = 0;
+            this.translateZ = 0;
             this.mesh = mesh;
         }
         //PUBLIC METHODS +++++++++++++++++++++++++++++++++++++++
-        Control.prototype.clone = function () {
-            var materials = [
-                new THREE.MeshLambertMaterial({ opacity: 0.6, color: 0xff44ff, transparent: true }),
-                new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true })
-            ];
-            var mesh2 = THREE.SceneUtils.createMultiMaterialObject(customGeometry, materials);
-            mesh2.children.forEach(function (child) {
-                child.castShadow = true;
-            });
-            mesh2.translateX(5);
-            mesh2.translateZ(5);
-            mesh2.name = "clone";
-            scene.remove(scene.getObjectByName("clone"));
-            scene.add(mesh2);
+        Control.prototype.translate = function () {
+            this.mesh.translateX(this.translateX);
+            this.mesh.translateY(this.translateY);
+            this.mesh.translateZ(this.translateZ);
+            this.positionX = this.mesh.position.x;
+            this.positionY = this.mesh.position.y;
+            this.positionZ = this.mesh.position.z;
         };
         return Control;
     })();
